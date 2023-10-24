@@ -2,27 +2,26 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import "dotenv/config";
-import User from "./User.js"
+import User from "./User.js";
 const app = express();
 const PORT = 3000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: `${process.env.CLIENT_URL}`,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Access-Control-Allow-Origin", `${process.env.CLIENT_URL}`);
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
   next();
 });
-
 
 async function connectToDatabase() {
   try {
@@ -37,17 +36,14 @@ async function connectToDatabase() {
   }
 }
 
-
 app.use(express.json());
 app.use("/api", User);
 
 connectToDatabase()
-  .then(() => {
-   
-  })
+  .then(() => {})
   .catch((error) => {
     console.error("Error starting the server:", error);
   });
- app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
