@@ -31,12 +31,12 @@ router.post(
         email: req.body.email,
         password: Password,
       });
-      console.log("user Created succesfully");
+      // console.log("user Created succesfully");
       res.json({
         success: true,
       });
     } catch {
-      console.error("Error creating user:", error);
+      // console.error("Error creating user:", error);
       res.json({
         success: false,
       });
@@ -67,7 +67,7 @@ router.post("/loginuser", async (req, res) => {
     const authToken = jwt.sign(data, process.env.JWT_SECRET);
     return res.json({ success: true, authToken: authToken });
   } catch (error) {
-    console.error("Error creating user:", error);
+    // console.error("Error creating user:", error);
     res.json({
       success: false,
     });
@@ -83,7 +83,7 @@ router.post("/google-signup", async (req, res) => {
       Username: Username,
       email: email,
     });
-    console.log("user Created succesfully");
+    // console.log("user Created succesfully");
     const newUser = await User.findOne({ Username });
     const data = {
       user: {
@@ -99,7 +99,7 @@ router.post("/google-signup", async (req, res) => {
     //  const userone = User.findOne({ Username });
     //  console.log(userone.id);
   } catch (error) {
-    console.log("Error creating user:", error);
+    // console.log("Error creating user:", error);
     res.json({
       success: false,
     });
@@ -125,7 +125,7 @@ router.post("/google-login", async (req, res) => {
     const authToken = jwt.sign(data, process.env.JWT_SECRET);
     return res.json({ success: true, authToken: authToken });
   } catch (error) {
-    console.error("Error creating user:", error);
+    // console.error("Error creating user:", error);
     res.json({
       success: false,
     });
@@ -188,7 +188,7 @@ router.post("/add-to-list", verifyToken, async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Error adding tasks:", error);
+    // console.error("Error adding tasks:", error);
     res.json({ success: false });
   }
 });
@@ -208,7 +208,7 @@ router.get("/get-user-list", verifyToken, async (req, res) => {
     // Return the user's cart data
     res.json({ userlists: user.lists });
   } catch (error) {
-    console.error("Error fetching user's cart data:", error);
+    // console.error("Error fetching user's cart data:", error);
     res.status(500).json({ errors: "Server error." });
   }
 });
@@ -230,7 +230,7 @@ router.delete("/tasks/:index", verifyToken, async (req, res) => {
     await user.save();
     res.json({ success: true });
   } catch (error) {
-    console.error("Error deleting task from the database:", error);
+    // console.error("Error deleting task from the database:", error);
     res.status(500).json({ errors: "Server error." });
   }
 });
@@ -245,14 +245,13 @@ router.delete("/delete-list/:listname", verifyToken, async (req, res) => {
     await user.save();
     res.json({ success: true });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     // Handle the error appropriately
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 router.post("/add-notes", verifyToken, async (req, res) => {
   const { data } = req.body;
-  console.log(data);
   const user = await User.findById(req.userId);
 
   if (!user) {
@@ -282,7 +281,7 @@ router.get("/get-notes", verifyToken, async (req, res) => {
     // Return the user's cart data
     res.json({ usernotes: user.notes });
   } catch (error) {
-    console.error("Error fetching user's cart data:", error);
+    // console.error("Error fetching user's cart data:", error);
     res.status(500).json({ errors: "Server error." });
   }
 });
@@ -301,7 +300,7 @@ router.delete("/delete-note", verifyToken, async (req, res) => {
     user.notes.splice(index, 1);
     await user.save();
   } catch (error) {
-    console.error("Error fetching user's cart data:", error);
+    // console.error("Error fetching user's cart data:", error);
     res.status(500).json({ errors: "Server error." });
   }
 });
@@ -313,7 +312,7 @@ router.get("/user-detail", verifyToken, async (req, res) => {
       res.json({ success: true, Username: user.Username, email: user.email });
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 });
 export default router;

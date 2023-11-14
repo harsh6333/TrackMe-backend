@@ -8,14 +8,14 @@ const PORT = 3000;
 
 app.use(
   cors({
-    origin: `${process.env.CLIENT_URL}`,
+    origin: `http://localhost:5173`,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", `${process.env.CLIENT_URL}`);
+  res.setHeader("Access-Control-Allow-Origin", `http://localhost:5173`);
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
@@ -31,7 +31,7 @@ async function connectToDatabase() {
 
     console.log("Connected to MongoDB");
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    // console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 }
@@ -42,7 +42,7 @@ app.use("/api", User);
 connectToDatabase()
   .then(() => {})
   .catch((error) => {
-    console.error("Error starting the server:", error);
+    // console.error("Error starting the server:", error);
   });
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
