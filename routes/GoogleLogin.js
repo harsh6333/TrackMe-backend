@@ -35,9 +35,7 @@ router.post("/google-signup", async (req, res) => {
 });
 
 router.post("/google-login", async (req, res) => {
-  // let Username = req.body.Username;
   const data = req.body.data;
-  // console.log(data);
   const Username = data.name;
   try {
     let UserData = await User.findOne({ Username }).maxTimeMS(30000);

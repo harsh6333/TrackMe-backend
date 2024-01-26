@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import "dotenv/config";
 import User from "./routes/User.js";
-import GoogleLogin from './routes/GoogleLogin.js'
+import GoogleLogin from "./routes/GoogleLogin.js";
 import LoginRoutes from "./routes/LoginRoutes.js";
 import NotesRoutes from "./routes/NotesRoutes.js";
 import TodoRoutes from "./routes/TodoRoutes.js";
