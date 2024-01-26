@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema({
   lists: [
     {
       listname: String,
-      icon: String, // Add the icon field
+      icon: String, 
       tasks: [],
     },
   ],
