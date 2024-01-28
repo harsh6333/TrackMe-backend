@@ -2,11 +2,11 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import "dotenv/config";
-import User from "./routes/User.js";
-import GoogleLogin from "./routes/GoogleLogin.js";
-import LoginRoutes from "./routes/LoginRoutes.js";
-import NotesRoutes from "./routes/NotesRoutes.js";
-import TodoRoutes from "./routes/TodoRoutes.js";
+import User from "./routes/User";
+import GoogleLogin from "./routes/GoogleLogin";
+import LoginRoutes from "./routes/LoginRoutes";
+import NotesRoutes from "./routes/NotesRoutes";
+import TodoRoutes from "./routes/TodoRoutes";
 const app = express();
 const PORT = 3000;
 
@@ -27,6 +27,8 @@ app.use((req, res, next) => {
   next();
 });
 
+
+//db connection
 async function connectToDatabase() {
   try {
     await mongoose.connect(
@@ -40,7 +42,10 @@ async function connectToDatabase() {
   }
 }
 
+
 app.use(express.json());
+
+//api routes
 app.use("/api", User);
 app.use("/api", GoogleLogin);
 app.use("/api", LoginRoutes);

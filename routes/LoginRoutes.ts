@@ -1,16 +1,17 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/Userdata.js";
+import User from "../models/Userdata";
 import "dotenv/config";
 import { body, validationResult } from "express-validator";
 const router = express.Router();
 
 router.post(
   "/createuser",
+  //validatin user send inputs
   [
     body("email", "Please Enter valid Email").isEmail(),
-    body("Username", "Username Should have atleast 5 characters").isLength({
+    body("Username", "Username Should have at least 5 characters").isLength({
       min: 5,
     }),
     body(
@@ -20,7 +21,7 @@ router.post(
       min: 5,
     }),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -56,16 +57,18 @@ router.post(
     }
   }
 );
-router.post("/loginuser", async (req, res) => {
+
+router.post("/loginuser", async (req: Request, res: Response) => {
   let Username = req.body.Username;
   try {
     let UserData = await User.findOne({ Username }).maxTimeMS(30000);
     if (!UserData) {
       return res.status(400).json({ error: "User Doesn't Exist" });
     }
-    const pwdCompare = await bcrypt.compare(
+    //checking if password is correct or not
+    const pwdCompare = bcrypt.compare(
       req.body.password,
-      UserData.password
+      UserData.password as string
     );
     if (!pwdCompare) {
       return res.status(400).json({ error: "Please Enter Correct Password" });
@@ -76,7 +79,7 @@ router.post("/loginuser", async (req, res) => {
         id: UserData.id,
       },
     };
-    const authToken = jwt.sign(data, process.env.JWT_SECRET);
+    const authToken = jwt.sign(data, process.env.JWT_SECRET || "");
     return res.json({ success: true, authToken: authToken });
   } catch (error) {
     console.error("Error logging in:", error);
