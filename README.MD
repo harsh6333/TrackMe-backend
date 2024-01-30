@@ -16,22 +16,24 @@ TrackMe! is a comprehensive platform designed to simplify your daily routine by 
 - **Weather Information:** Stay informed with the latest weather conditions for your location. Plan your day accordingly and receive weather alerts to stay safe.
 
 
-For Coding Purpose
+## For Coding Purpose
 ## How to Run
-1. Fork both the `TrackMe--frontend` and `TrackMe-backend` repositories to your system from my account.
-2.Create .env variable in frontend and backend
-3.In .env variable of frontend store <!--VITE_CLIENT_ID (google client id for authentication/signin with OAUTH google authentication), VITE_SERVER_URL(on which your server/backend code is running)-->
-3.In .env variable of backend store <!--JWT_SECRET(Use openssl to generate a random string (base64-encoded) OR write a random string(eg:-HJGHJGHJMNMSBVMN)),(USER,PASSWORD)(your mongodb user details),CLIENT_URL(url on which your frontend is running))-->
+- **1:** Fork both the `TrackMe--frontend` and `TrackMe-backend` repositories to your system.
+- **2:** Create .env variable in frontend and backend.
+- **3:** In .env variable of frontend store <!--VITE_CLIENT_ID (google client id for authentication/signin with OAUTH google authentication), VITE_SERVER_URL(on which your server/backend code is running)-->.
+- **4:** In .env variable of backend store <!--JWT_SECRET(Use openssl to generate a random string (base64-encoded) OR write a random string(eg:-HJGHJGHJMNMSBVMN)),(PASSWORD,USER)(your mongodb user details),CLIENT_URL(url on which your frontend is running))-->.
 
 ### Frontend
 
-2. Open a terminal and navigate to the ` TrackMe--frontend/client` directory:
+2. Open a terminal and navigate to the `TrackMe--frontend/client` directory:
+   ```bash
    npm i     <!-- To install required packages and modules-->
-   npm run dev    <!-- It will be running on port 5173-->
+   npm run dev    <!-- IT will be running on port 5173-->
 
 ### Backend
 
 3. Open a terminal and navigate to the `TrackMe-backend/server` directory:
+   ```bash
    npm i     <!-- To install required packages and modules-->
    npm start    <!-- It will be running on port 3000-->
 
