@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node ./src/app.ts",
-    "format": "prettier --write . --ignore-path .gitignore",
     "start": "node ./dist/app.js"
   },
   "keywords": [],
