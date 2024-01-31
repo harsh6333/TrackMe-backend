@@ -1,14 +1,17 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User from "../models/Userdata";
+import { PrismaClient, Prisma } from "@prisma/client";
 import "dotenv/config";
 
 const router = express.Router();
+const prisma = new PrismaClient();
+
 
 //custom interface for requests with userId
 interface AuthRequest extends Request {
   userId?: string;
 }
+
 
 // Authorization token verification middleware
 const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -40,21 +43,26 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   }
 };
 
-// Route to add tasks to a user's list with authorization token as middleware
+
+
+// Route to create a list and add tasks to a user's list with authorization token as middleware
 router.post(
   "/add-to-list",
   verifyToken,
   async (req: AuthRequest, res: Response) => {
     try {
       const { tasklistbyId } = req.body;
-      const user = await User.findById(req.userId);
+      // console.log(tasklistbyId);
+
+      const userId = parseInt(req.userId as string);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { lists: true }, 
+      });
 
       if (!user) {
         return res.status(404).json({ errors: "User not found." });
-      }
-
-      if (!Array.isArray(user.lists)) {
-        user.lists = [];
       }
 
       for (const listName in tasklistbyId) {
@@ -63,46 +71,63 @@ router.post(
         );
 
         if (existingList) {
-          existingList.tasks = tasklistbyId[listName].tasks;
+          // Update tasks within the existing list
+          await prisma.list.update({
+            where: { id: existingList.id },
+            data: { tasks: { set: tasklistbyId[listName].tasks || [] } },
+          });
         } else {
+          // Create a new list if it doesn't exist
           const newList = {
             listname: listName,
             icon: tasklistbyId[listName].icon,
             tasks: tasklistbyId[listName].tasks || [],
+            userId: user.id,
           };
-          user.lists.push(newList);
+          await prisma.list.create({ data: newList });
         }
       }
 
-      await user.save();
-
       res.json({ success: true });
     } catch (error) {
+      // console.error(error);
       res.json({ success: false });
     }
   }
 );
 
-// Route to get a user's lists
+
+
+
+//route to fetch all lists of user
 router.get(
   "/get-user-list",
   verifyToken,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = req.userId;
-      const user = await User.findById(userId).maxTimeMS(30000);
+      const userId = parseInt(req.userId as string);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { lists: true }, // Include lists to avoid additional queries
+      });
 
       if (!user) {
         return res.status(404).json({ errors: "User not found." });
       }
 
-      // Return the user's cart data
+      // Return the user's lists
       res.json({ userlists: user.lists });
     } catch (error) {
+      // console.error(error);
       res.status(500).json({ errors: "Server error." });
     }
   }
 );
+
+
+
+
 
 // Route to delete a task from a list
 router.delete(
@@ -111,25 +136,52 @@ router.delete(
   async (req: AuthRequest, res: Response) => {
     try {
       const { index, listname } = req.body;
-      const user = await User.findById(req.userId);
+      const userId = parseInt(req.userId as string);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { lists: true },
+      });
 
       if (!user) {
         return res.status(404).json({ errors: "User not found." });
       }
 
-      user.lists.map((list) => {
-        if (listname === list.listname) {
-          list.tasks.splice(index, 1);
-        }
-      });
+      // Find the list that needs to be updated
+      const updatedListIndex = user.lists.findIndex(
+        (list) => list.listname === listname
+      );
 
-      await user.save();
+      if (updatedListIndex !== -1) {
+        const updatedTasks = user.lists[updatedListIndex].tasks.filter(
+          (_, i) => i !== index
+        ) as Prisma.JsonValue[];
+
+        // Create a new list with the updated tasks
+        const updatedList = {
+          listname: listname,
+          icon: user.lists[updatedListIndex].icon,
+          tasks: updatedTasks,
+          userId: userId,
+        };
+
+        await prisma.list.update({
+          where: {
+            id: user.lists[updatedListIndex].id,
+          },
+          data: updatedList as any,
+        });
+      }
       res.json({ success: true });
     } catch (error) {
+      // console.error(error);
       res.status(500).json({ errors: "Server error." });
     }
   }
 );
+
+
+
 
 // Route to delete a list
 router.delete(
@@ -138,16 +190,34 @@ router.delete(
   async (req: AuthRequest, res: Response) => {
     try {
       const { listname } = req.params;
-      const user = await User.findById(req.userId);
+      const userId = parseInt(req.userId as string);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { lists: true },
+      });
 
       if (!user) {
         return res.status(404).json({ errors: "User not found." });
       }
 
-      user.lists = user.lists.filter((list) => list.listname !== listname);
-      await user.save();
+      // list to be deleted
+      const listToDelete = user.lists.find(
+        (list) => list.listname === listname
+      );
+
+      if (!listToDelete) {
+        return res.status(404).json({ errors: "List not found." });
+      }
+
+      //delete list with prisma method
+      await prisma.list.delete({
+        where: { id: listToDelete.id },
+      });
+
       res.json({ success: true });
     } catch (error) {
+      // console.error(error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }

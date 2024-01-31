@@ -1,11 +1,12 @@
 import express, { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/Userdata";
+import { PrismaClient } from "@prisma/client";
 import { z, ZodError } from "zod";
 import "dotenv/config";
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // Validation schema using zod
 const createUserSchema = z.object({
@@ -18,8 +19,11 @@ router.post("/createuser", async (req: Request, res: Response) => {
   try {
     const userInput = createUserSchema.parse(req.body);
 
-    // Check if user already exists by username
-    const existingUser = await User.findOne({ Username: userInput.Username });
+    // Checking if user already exists by username
+    const existingUser = await prisma.user.findFirst({
+      where: { Username: userInput.Username },
+    });
+
     if (existingUser) {
       return res
         .status(400)
@@ -30,10 +34,12 @@ router.post("/createuser", async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(userInput.password, salt);
 
-    await User.create({
-      Username: userInput.Username,
-      email: userInput.email,
-      password: passwordHash,
+    await prisma.user.create({
+      data: {
+        Username: userInput.Username,
+        email: userInput.email,
+        password: passwordHash,
+      },
     });
 
     res.json({
@@ -41,12 +47,12 @@ router.post("/createuser", async (req: Request, res: Response) => {
     });
   } catch (error) {
     if (error instanceof ZodError) {
-      // Handle zod validation errors
+      // zod validation errors
       const errorMessage = error.errors.map((e) => e.message).join(", ");
       return res.status(400).json({ errors: errorMessage });
     }
 
-    console.error("Error creating user:", error);
+    // console.error("Error creating user:", error);
     res.json({
       success: false,
     });
@@ -63,25 +69,27 @@ router.post("/loginuser", async (req: Request, res: Response) => {
   try {
     const loginInput = loginUserSchema.parse(req.body);
 
-    let UserData = await User.findOne({
-      Username: loginInput.Username,
-    }).maxTimeMS(30000);
-    if (!UserData) {
+    let userData = await prisma.user.findFirst({
+      where: { Username: loginInput.Username },
+    });
+
+    if (!userData) {
       return res.status(400).json({ error: "User Doesn't Exist" });
     }
 
-    //checking if password is correct or not
+    // checking if the password is correct or not
     const pwdCompare = await bcrypt.compare(
       loginInput.password,
-      UserData.password as string
+      userData.password as string
     );
+
     if (!pwdCompare) {
       return res.status(400).json({ error: "Please Enter Correct Password" });
     }
 
     const data = {
       user: {
-        id: UserData.id,
+        id: userData.id.toString(),
       },
     };
     const authToken = jwt.sign(data, process.env.JWT_SECRET || "");

@@ -1,15 +1,34 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
 import User from "./routes/User";
 import GoogleLogin from "./routes/GoogleLogin";
 import LoginRoutes from "./routes/LoginRoutes";
 import NotesRoutes from "./routes/NotesRoutes";
 import TodoRoutes from "./routes/TodoRoutes";
+
+
 const app = express();
 const PORT = 3000;
+const prisma = new PrismaClient();
 
+
+//function to check if db is connected or not
+async function checkDatabaseConnection() {
+  try {
+    await prisma.$connect();
+    console.log("Connected to the database");
+  } catch (error) {
+    console.error("Failed to connect to the database:", error);
+  } finally {
+    await prisma.$disconnect(); 
+  }
+}
+checkDatabaseConnection();
+
+
+//cors for backend and frontend communication
 app.use(
   cors({
     origin: `${process.env.CLIENT_URL}`,
@@ -18,6 +37,8 @@ app.use(
   })
 );
 
+
+//middleware to set headers
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", `${process.env.CLIENT_URL}`);
   res.header(
@@ -27,22 +48,7 @@ app.use((req, res, next) => {
   next();
 });
 
-
-//db connection
-async function connectToDatabase() {
-  try {
-    await mongoose.connect(
-      `mongodb+srv://${process.env.USER}:${process.env.PASSWORD}@cluster0.xrynsi5.mongodb.net/Todo`
-    );
-
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    // console.error("Error connecting to MongoDB:", error);
-    process.exit(1);
-  }
-}
-
-
+//Incoming json parsing
 app.use(express.json());
 
 //api routes
@@ -52,11 +58,7 @@ app.use("/api", LoginRoutes);
 app.use("/api", NotesRoutes);
 app.use("/api", TodoRoutes);
 
-connectToDatabase()
-  .then(() => {})
-  .catch((error) => {
-    // console.error("Error starting the server:", error);
-  });
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

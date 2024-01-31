@@ -1,19 +1,24 @@
-import express, { NextFunction, Request, Response } from "express";
-import User from "../models/Userdata";
+import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import { PrismaClient} from "@prisma/client";
 import "dotenv/config";
-const router = express.Router();
 
-//custom interface for requests with userId
+const router = express.Router();
+const prisma = new PrismaClient();
+
+// Custom interface for requests with userId
 interface AuthRequest extends Request {
   userId?: string;
 }
 
+// Authorization token verification middleware
 const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
   const authToken = req.header("Authorization");
+
   if (!authToken) {
     return res.status(401).json({ errors: "Access denied. Please log in." });
   }
+
   try {
     const decoded = jwt.verify(
       authToken,
@@ -24,76 +29,89 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
       throw new Error("Invalid token structure.");
     }
 
-    req.userId = decoded.user?.id; 
+    req.userId = decoded.user?.id;
     next();
   } catch (error) {
     res.status(400).json({ errors: "Invalid token." });
   }
 };
 
+
+//router to add and update notes with token verification middleware
 router.post(
   "/add-notes",
   verifyToken,
   async (req: AuthRequest, res: Response) => {
     const { data } = req.body;
-    const user = await User.findById(req.userId);
+    const userId = parseInt(req.userId as string);
 
-    if (!user) {
-      return res.status(404).json({ errors: "User not found." });
-    }
-
-    // Loop through the data array and push each object to the notes array
-    user.notes = data;
-
-    await user.save();
-
-    res.json({ success: true });
-  }
-);
-
-router.get(
-  "/get-notes",
-  verifyToken,
-  async (req: AuthRequest, res: Response) => {
     try {
-      // Get the user ID from token
-      const userId = req.userId;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { notes: { set: data } },
+      });
 
-      // Find the user by their ID
-      const user = await User.findById(userId).maxTimeMS(30000);
-
-      if (!user) {
-        return res.status(404).json({ errors: "User not found." });
-      }
-
-      // Return the user's notes data
-      res.json({ usernotes: user.notes });
+      res.json({ success: true });
     } catch (error) {
-      // console.error("Error fetching user's notes data:", error);
+      // console.error("Error updating user notes:", error);
       res.status(500).json({ errors: "Server error." });
     }
   }
 );
 
+
+//route get all users notes with token verification func. as middleware
+router.get(
+  "/get-notes",
+  verifyToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = parseInt(req.userId as string);
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+      
+      if (!user) {
+        return res.status(404).json({ errors: "User not found." });
+      }
+
+      res.json({ usernotes: user.notes });
+    } catch (error) {
+      // console.error("Error fetching user notes:", error);
+      res.status(500).json({ errors: "Server error." });
+    }
+  }
+);
+
+//router to delete a user note
 router.delete(
   "/delete-note",
   verifyToken,
   async (req: AuthRequest, res: Response) => {
     try {
       const { index } = req.body;
-      // Get the user ID from  token
-      const userId = req.userId;
+      const userId = parseInt(req.userId as string);
 
-      // Find the user by their ID
-      const user = await User.findById(userId).maxTimeMS(30000);
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
 
       if (!user) {
         return res.status(404).json({ errors: "User not found." });
       }
+
+      // Remove the note at that index
       user.notes.splice(index, 1);
-      await user.save();
+      const newnotes = user.notes as any;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { notes: newnotes },
+      });
+
+      res.json({ success: true });
     } catch (error) {
-      // console.error("Error fetching user's cart data:", error);
+      // console.error("Error deleting user note:", error);
       res.status(500).json({ errors: "Server error." });
     }
   }
