@@ -8,27 +8,26 @@ import LoginRoutes from "./routes/LoginRoutes";
 import NotesRoutes from "./routes/NotesRoutes";
 import TodoRoutes from "./routes/TodoRoutes";
 
-
 const app = express();
 const PORT = 3000;
 const prisma = new PrismaClient();
 
-
-//function to check if db is connected or not
-async function checkDatabaseConnection() {
+// function to check if db is connected or not and run test
+app.get("/api/health", async (req, res) => {
   try {
     await prisma.$connect();
     console.log("Connected to the database");
+    res.status(200).json({ message: "Connected to the database" });
   } catch (error) {
     console.error("Failed to connect to the database:", error);
+    res.status(500).json({ message: "Failed to connect to the database" });
   } finally {
-    await prisma.$disconnect(); 
+    // Disconnect from the database after the check
+    await prisma.$disconnect();
   }
-}
-checkDatabaseConnection();
+});
 
-
-//cors for backend and frontend communication
+// CORS for backend and frontend communication
 app.use(
   cors({
     origin: `${process.env.CLIENT_URL}`,
@@ -37,8 +36,7 @@ app.use(
   })
 );
 
-
-//middleware to set headers
+// Middleware to set headers
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", `${process.env.CLIENT_URL}`);
   res.header(
@@ -48,17 +46,21 @@ app.use((req, res, next) => {
   next();
 });
 
-//Incoming json parsing
+// Incoming JSON parsing
 app.use(express.json());
 
-//api routes
+// API routes
 app.use("/api", User);
 app.use("/api", GoogleLogin);
 app.use("/api", LoginRoutes);
 app.use("/api", NotesRoutes);
 app.use("/api", TodoRoutes);
 
+// If the script is run directly, start the server
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
