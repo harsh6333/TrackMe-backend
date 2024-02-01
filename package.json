@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "ts-node ./src/app.ts",
     "format": "prettier --write . --ignore-path .gitignore",
-    "start": "npm test && nodemon ./dist/app.js",
+    "start": "npm test && node ./dist/app.js",
     "test": "jest"
   },
   "keywords": [],
