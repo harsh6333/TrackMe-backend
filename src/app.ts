@@ -12,7 +12,6 @@ const app = express();
 const PORT = 3000;
 const prisma = new PrismaClient();
 
-// function to check if db is connected or not and run test
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$connect();
