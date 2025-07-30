@@ -21,7 +21,7 @@ app.get("/api/health", async (req, res) => {
     console.error("Failed to connect to the database:", error);
     res.status(500).json({ message: "Failed to connect to the database" });
   } finally {
-    // Disconnect from the database after the check
+   
     await prisma.$disconnect();
   }
 });
